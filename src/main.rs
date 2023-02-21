@@ -26,12 +26,19 @@ fn handle_connection(mut stream: TcpStream) {
     let header = buf_reader.lines().next().unwrap().unwrap();
 
     let (status_line, filename) = match &header[..] {
-        "GET / HTTP/1.1" =>  ("HTTP/1.1 200 OK", "index.html"),
+        "GET / HTTP/1.1" =>  {
+            println!("Route: /");
+            ("HTTP/1.1 200 OK", "index.html")
+        },
         "GET /sleep HTTP/1.1" => {
+            println!("Route: /sleep");
             thread::sleep(Duration::from_secs(10));
             ("HTTP/1.1 200 OK", "index.html")
         },
-        _ => ("HTTP/1.1 404 NOT FOUND", "error.html"),
+        _ => {
+            println!("Route /error");
+            ("HTTP/1.1 404 NOT FOUND", "error.html")
+        },
     };
 
     let contents = fs::read_to_string(filename).unwrap();
@@ -41,4 +48,5 @@ fn handle_connection(mut stream: TcpStream) {
         format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{contents}");
 
     stream.write_all(response.as_bytes()).unwrap();
+    stream.flush().unwrap();
 }
